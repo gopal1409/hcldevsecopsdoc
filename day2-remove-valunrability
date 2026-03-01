@@ -1,0 +1,141 @@
+side-by-side comparison of Vulnerable vs Secure versions for your:
+
+⚛️ React Frontend
+
+☕ Spring Boot Backend
+
+This format is perfect for:
+
+DevSecOps workshops
+
+Secure coding training
+
+Code review exercises
+
+CodeSweep SAST demonstration
+
+🏗️ Secure vs Vulnerable Architecture
+4
+⚛️ FRONTEND – React
+🐞 1️⃣ XSS (Cross-Site Scripting)
+❌ Vulnerable
+// Profile.js
+<div dangerouslySetInnerHTML={{ __html: name }} />
+
+User-controlled URL parameter injected into DOM.
+
+✅ Secure Version
+// Profile.js
+<div>{name}</div>
+
+✔ React automatically escapes content
+✔ No raw HTML rendering
+✔ Eliminates DOM-based XSS
+
+🔒 Enterprise Hardening
+
+Add Content Security Policy (CSP)
+
+Sanitize with DOMPurify (if HTML needed)
+
+🐞 2️⃣ Hardcoded Secret
+❌ Vulnerable
+const API_SECRET = "sk_live_ABC123_SECRET";
+✅ Secure Version
+const API_SECRET = process.env.REACT_APP_API_SECRET;
+
+.env (not committed):
+
+REACT_APP_API_SECRET=xxxx
+
+✔ No secrets in repo
+✔ Use Azure App Service configuration
+✔ Optionally integrate Azure Key Vault
+
+☕ BACKEND – Spring Boot
+🐞 3️⃣ SQL Injection
+❌ Vulnerable
+String query = "SELECT * FROM users WHERE username = '" + username + "'";
+Statement stmt = connection.createStatement();
+✅ Secure Version (Prepared Statement)
+String query = "SELECT * FROM users WHERE username = ?";
+PreparedStatement pstmt = connection.prepareStatement(query);
+pstmt.setString(1, username);
+ResultSet rs = pstmt.executeQuery();
+
+✔ Prevents SQL injection
+✔ Parameter binding
+✔ Secure query execution
+
+🔒 Best Practice Upgrade
+
+Use Spring Data JPA:
+
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByUsername(String username);
+}
+🐞 4️⃣ Insecure Deserialization
+❌ Vulnerable
+ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
+return ois.readObject();
+✅ Secure Version
+@PostMapping("/safe")
+public User createUser(@RequestBody User user) {
+    return userService.save(user);
+}
+
+✔ Uses JSON mapping
+✔ No arbitrary object execution
+✔ Eliminates RCE risk
+
+🐞 5️⃣ Hardcoded Database Password
+❌ Vulnerable
+spring.datasource.password=admin123
+✅ Secure Version
+spring.datasource.password=${DB_PASSWORD}
+
+Set in Azure App Service:
+
+DB_PASSWORD=secure-prod-value
+
+✔ No secret in code
+✔ Secure config injection
+✔ Production-ready
+
+🐞 6️⃣ Broken Authentication
+❌ Vulnerable
+if (role.equals("admin")) {
+    return "Welcome Admin";
+}
+
+User controls role parameter.
+
+✅ Secure Version (Spring Security)
+@PreAuthorize("hasRole('ADMIN')")
+@GetMapping("/admin")
+public String adminPanel() {
+    return "Welcome Admin";
+}
+
+✔ Role-based access control
+✔ Enforced server-side
+✔ Cannot bypass via query param
+
+📊 Summary Table
+Vulnerability	Risk	Secure Fix
+XSS	Session hijack	Remove raw HTML rendering
+Hardcoded Secret	Credential leak	Environment variables
+SQL Injection	DB compromise	PreparedStatement / JPA
+Deserialization	RCE	JSON mapping
+Hardcoded DB Password	Full system compromise	Config injection
+Broken Auth	Privilege escalation	Spring Security
+🛡️ DevSecOps Security Workflow
+Developer writes code
+   ↓
+PR created
+   ↓
+CodeSweep detects issue
+   ↓
+Fix applied
+   ↓
+Secure merge
