@@ -1,0 +1,211 @@
+build an starter pipeline for react js which is running in frontend folder and spring boot which is running in backend folder. store it in artifact using github action also provide explanation of the pipeline
+  Below is a clean starter CI pipeline for:
+
+⚛️ React JS → frontend/
+
+☕ Spring Boot → backend/
+
+📦 Stores build outputs as GitHub Artifacts
+
+🧪 Runs tests for both
+
+🚀 No Docker required (pure CI + artifact packaging)
+
+This is ideal for:
+
+CI validation
+
+Pull request checks
+
+Artifact-based promotion (Dev → Stage → Prod)
+  ##################################
+  Expected Project Structure
+  ###################
+  repo-root/
+│
+├── frontend/        # React app
+│   ├── package.json
+│   └── src/
+│
+├── backend/         # Spring Boot app
+│   ├── pom.xml
+│   └── src/
+│
+└── .github/workflows/ci.yml
+  ############################
+  GitHub Actions Starter Pipeline
+  .github/workflows/ci.yml
+  #########################
+name: React + Spring Boot CI with Artifacts
+
+on:
+  push:
+    branches: [ develop, main ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+
+# ------------------------------------------------
+# 1️⃣ Frontend Build (React)
+# ------------------------------------------------
+  frontend:
+    name: Build React App
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Tests
+        run: npm test -- --watchAll=false
+
+      - name: Build React App
+        run: npm run build
+
+      - name: Upload Frontend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-build
+          path: frontend/build
+
+# ------------------------------------------------
+# 2️⃣ Backend Build (Spring Boot)
+# ------------------------------------------------
+  backend:
+    name: Build Spring Boot App
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn clean verify
+
+      - name: Upload Backend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: springboot-jar
+          path: backend/target/*.jar
+  ##################################################
+  What Gets Stored as Artifacts?
+
+After successful run:
+
+🔹 React Artifact
+
+Folder: frontend/build/
+
+Contains:
+
+Static HTML
+
+JS bundles
+
+CSS
+
+Assets
+
+Used for:
+
+CDN deployment
+
+Nginx hosting
+
+Artifact promotion
+##################
+🔹 Spring Boot Artifact
+
+File: backend/target/*.jar
+
+Executable JAR
+
+Used for:
+
+Docker image build (later stage)
+
+Direct deployment to VM
+
+Promotion to staging/prod
+############################
+Pipeline Explanation (Step-by-Step)
+##################
+Trigger Conditions
+#######################
+on:
+  push:
+    branches: [ develop, main ]
+  pull_request:
+  ###############
+  on:
+  push:
+    branches: [ develop, main ]
+  pull_request:
+  #################
+  2️⃣ Frontend Job
+Setup
+
+Node 20
+
+Uses npm caching for faster builds
+
+Steps
+
+npm ci → clean install
+
+npm test → unit tests
+
+npm run build → production bundle
+
+Artifact Upload
+uses: actions/upload-artifact@v4
+
+Stores build output in GitHub.
+
+3️⃣ Backend Job
+Setup
+
+Java 17 (Temurin)
+
+Maven cache enabled
+
+Steps
+
+mvn clean verify
+
+Compile
+
+Unit test
+
+Package JAR
+
+Artifact Upload
+
+Uploads generated .jar file.
+###############################################
