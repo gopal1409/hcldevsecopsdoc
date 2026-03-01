@@ -1,0 +1,186 @@
+ntentionally vulnerable demo repository structure for training, DevSecOps workshops, or CodeSweep/SAST practice.
+
+⚠️ For training purposes only — DO NOT deploy to production.
+
+This demo includes:
+
+⚛️ React (frontend) vulnerable patterns
+
+☕ Spring Boot (backend) vulnerable patterns
+
+Multiple OWASP Top 10 issues
+
+Designed to trigger SAST tools like CodeSweep
+
+🏗️ Vulnerable Demo Architecture
+4
+📂 Full Repository Structure
+vulnerable-devsecops-demo/
+│
+├── frontend/
+│   ├── package.json
+│   ├── src/
+│   │   ├── App.js
+│   │   ├── Profile.js              # XSS
+│   │   ├── Login.js                # Hardcoded API key
+│   │   └── utils/api.js            # Insecure API call
+│   └── .env                        # (intentionally committed secret)
+│
+├── backend/
+│   ├── pom.xml
+│   ├── src/main/java/com/demo/
+│   │   ├── DemoApplication.java
+│   │   ├── controller/
+│   │   │   ├── UserController.java      # SQL Injection
+│   │   │   ├── AdminController.java     # Broken Auth
+│   │   │   └── DeserializeController.java # Insecure Deserialization
+│   │   └── config/
+│   │       └── SecurityConfig.java
+│   └── src/main/resources/
+│       ├── application.properties   # Hardcoded password
+│       └── data.sql
+│
+└── README.md
+⚛️ FRONTEND – Vulnerable Examples
+🐞 1️⃣ XSS – Profile.js
+// frontend/src/Profile.js
+import React from "react";
+
+function Profile() {
+  const name = new URLSearchParams(window.location.search).get("name");
+
+  return (
+    <div>
+      <h2>User Profile</h2>
+      <div dangerouslySetInnerHTML={{ __html: name }} />
+    </div>
+  );
+}
+
+export default Profile;
+
+Triggers:
+
+DOM XSS
+
+Reflected XSS detection
+
+🐞 2️⃣ Hardcoded Secret – Login.js
+// frontend/src/Login.js
+const API_SECRET = "sk_live_ABC123_SECRET";
+
+export default function Login() {
+  return <div>Login Page</div>;
+}
+
+Triggers:
+
+Hardcoded credential detection
+
+🐞 3️⃣ Committed .env File
+# frontend/.env
+REACT_APP_API_KEY=super-secret-api-key
+
+Triggers:
+
+Secret scanning
+
+☕ BACKEND – Vulnerable Examples
+🐞 4️⃣ SQL Injection – UserController.java
+@GetMapping("/user")
+public String getUser(@RequestParam String username) throws Exception {
+    String query = "SELECT * FROM users WHERE username = '" + username + "'";
+    Statement stmt = connection.createStatement();
+    ResultSet rs = stmt.executeQuery(query);
+    return "User Found";
+}
+
+Triggers:
+
+SQL Injection
+
+Unsafe string concatenation
+
+🐞 5️⃣ Broken Authentication – AdminController.java
+@GetMapping("/admin")
+public String adminPanel(@RequestParam String role) {
+    if (role.equals("admin")) {
+        return "Welcome Admin";
+    }
+    return "Access Denied";
+}
+
+Triggers:
+
+Broken access control
+
+Insecure authorization
+
+🐞 6️⃣ Insecure Deserialization
+@PostMapping("/deserialize")
+public Object deserialize(@RequestBody byte[] data) throws Exception {
+    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
+    return ois.readObject();
+}
+
+Triggers:
+
+Remote code execution risk
+
+Unsafe deserialization
+
+🐞 7️⃣ Hardcoded DB Password
+# backend/src/main/resources/application.properties
+spring.datasource.url=jdbc:mysql://localhost:3306/demo
+spring.datasource.username=root
+spring.datasource.password=admin123
+
+Triggers:
+
+Hardcoded credential detection
+
+📋 README.md (Important for Demo)
+
+Add clear disclaimer:
+
+# Vulnerable DevSecOps Demo Application
+
+⚠️ WARNING:
+This repository contains intentionally vulnerable code
+for training and security testing purposes only.
+
+DO NOT deploy in production.
+🎯 OWASP Top 10 Coverage
+Vulnerability	OWASP Mapping
+SQL Injection	A03: Injection
+XSS	A03: Injection
+Hardcoded Secrets	A02: Cryptographic Failures
+Broken Auth	A01: Broken Access Control
+Insecure Deserialization	A08: Software Integrity
+🧪 How to Use This for Training
+Scenario 1 – SAST Demo
+
+Create PR
+
+Run CodeSweep
+
+Show detected vulnerabilities
+
+Fix issues live
+
+Scenario 2 – DevSecOps Workshop
+
+Flow:
+
+Developer commits vulnerable code
+   ↓
+CI runs SAST
+   ↓
+Security issues detected
+   ↓
+Fix & secure coding session
+Scenario 3 – DAST Demo
+
+Deploy intentionally vulnerable backend
+Run scanner (AppScan / ZAP)
+Show runtime vulnerabilities
